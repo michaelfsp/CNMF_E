@@ -2,7 +2,7 @@ function [C_offset] = updateTemporal_endoscope(obj, Y, allow_deletion)
 %% run HALS by fixating all spatial components
 % input:
 %   Y:  d*T, fluorescence data
-%   allow_deletion: boolean, allow deletion (default: true) 
+%   allow_deletion: boolean, allow deletion (default: true)
 % output:
 %   C_raw: K*T, temporal components without being deconvolved
 
@@ -13,7 +13,7 @@ maxIter = obj.options.maxIter;
 deconv_options_0 = obj.options.deconv_options;
 
 if ~exist('allow_deletion', 'var')
-    allow_deletion = false; 
+    allow_deletion = false;
 end
 %% initialization
 A = obj.A;
@@ -34,33 +34,37 @@ kernel_pars = cell(K,1);
 ind_del = false(K, 1);
 for miter=1:maxIter
     for k=1:K
+        if  aa(k)==0
+            C_raw(k, :) = C_raw(k, :)*0;
+            C(k,:) = C(k, :)*0;
+            S(k, :) = S(k, :)*0;
+            ind_del(k) = true;
+            continue;
+        end
         if ind_del
             continue;
         end
         temp = C(k, :) + (U(k, :)-V(k, :)*C)/aa(k);
         %remove baseline and estimate noise level
-        if range(temp)/std(temp)>6
-            [b, tmp_sn] = estimate_baseline_noise(temp);
+        [b_hist, sn_hist] = estimate_baseline_noise(temp);
+        b = mean(temp(temp<median(temp)));
+        sn_psd = GetSn(temp);
+        if sn_psd<sn_hist
+            tmp_sn = sn_psd;
         else
-            b = mean(temp(temp<median(temp)));
-            tmp_sn = GetSn(temp);
+            tmp_sn = sn_hist;
+            b = b_hist;
         end
-        % we use two methods for estimating the noise level
-        %         psd_sn = GetSn(temp);
-        %         if tmp_sn>psd_sn
-        %             tmp_sn =psd_sn;
-        %             [temp, ~] = remove_baseline(temp, tmp_sn);
-        %         else
-        %             temp = temp - b;
-        %         end
+        
         temp = temp -b;
         sn(k) = tmp_sn;
         
         % deconvolution
         if obj.options.deconv_flag
-            [ck, sk, deconv_options]= deconvolveCa(temp, deconv_options_0, 'maxIter', 2);
+            [ck, sk, deconv_options]= deconvolveCa(temp, deconv_options_0, 'maxIter', 2, 'sn', tmp_sn);
             smin(k) = deconv_options.smin;
             kernel_pars{k} = reshape(deconv_options.pars, 1, []);
+            temp = temp - deconv_options.b; 
         else
             ck = max(0, temp);
         end
@@ -85,7 +89,7 @@ obj.C_raw = bsxfun(@times, C_raw, 1./sn');
 obj.S = bsxfun(@times, S, 1./sn');
 obj.P.kernel_pars =cell2mat( kernel_pars);
 obj.P.smin = smin/sn;
-obj.P.sn_neuron = sn; 
+obj.P.sn_neuron = sn;
 if allow_deletion
     obj.delete(ind_del);
 end

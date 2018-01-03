@@ -10,7 +10,7 @@ end
 
 %% data preparation
 Y = neuron.reshape(Y, 2); 
-Yac = neuron.reshape(neuron.A*neuron.C_raw, 2);
+Yac = neuron.reshape(neuron.A*neuron.C, 2);
 Ybg = neuron.reshape(Ybg, 2);
 Ysignal = neuron.reshape(Ysignal, 2);
 figure('position', [0,0, 600, 400]);
@@ -106,7 +106,7 @@ for m=t_begin:kt:t_end
     %     box on; set(gca, 'xtick', []);
     %     set(gca, 'ytick', []);
     
-    
+    drawnow(); 
     if save_avi
         temp = getframe(gcf);
         temp = imresize(temp.cdata, [400, 600]);
