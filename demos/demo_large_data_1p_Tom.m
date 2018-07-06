@@ -10,12 +10,12 @@ nam = neuron.select_data(nam);  %if nam is [], then select data interactively
 
 %% parameters
 % -------------------------    COMPUTATION    -------------------------  %
-pars_envs = struct('memory_size_to_use', 8, ...   % GB, memory space you allow to use in MATLAB
-    'memory_size_per_patch', 2, ...   % GB, space for loading data within one patch
-    'patch_dims', [128, 128]);  %px, patch size
+pars_envs = struct('memory_size_to_use', 200, ...   % GB, memory space you allow to use in MATLAB
+    'memory_size_per_patch', 12, ...   % GB, space for loading data within one patch
+    'patch_dims', [64, 64]);  %px, patch size
 
 % -------------------------      SPATIAL      -------------------------  %
-gSig = 4;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
+gSig = 3;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
 gSiz = 16;          % pixel, neuron diameter
 ssub = 1;           % spatial downsampling factor
 with_dendrites = true;   % with dendrites or not
@@ -37,7 +37,7 @@ spatial_algorithm = 'hals_thresh';
 Fs = 10;             % frame rate
 tsub = 1;           % temporal downsampling factor
 deconv_options = struct('type', 'ar1', ... % model of the calcium traces. {'ar1', 'ar2'}
-    'method', 'thresholded', ... % method for running deconvolution {'foopsi', 'constrained', 'thresholded'}
+    'method', 'foopsi', ... % method for running deconvolution {'foopsi', 'constrained', 'thresholded'}
     'smin', -5, ...         % minimum spike size. When the value is negative, the actual threshold is abs(smin)*noise level
     'optimize_pars', true, ...  % optimize AR coefficients
     'optimize_b', true, ...% optimize the baseline);
@@ -50,7 +50,7 @@ detrend_method = 'spline';  % compute the local minimum as an estimation of tren
 % -------------------------     BACKGROUND    -------------------------  %
 bg_model = 'ring';  % model of the background {'ring', 'svd'(default), 'nmf'}
 nb = 1;             % number of background sources for each patch (only be used in SVD and NMF model)
-ring_radius = 18;  % when the ring model used, it is the radius of the ring used in the background model.
+ring_radius = 17;  % when the ring model used, it is the radius of the ring used in the background model.
 %otherwise, it's just the width of the overlapping area
 num_neighbors = []; % number of neighbors for each neuron
 
